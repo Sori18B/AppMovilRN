@@ -21,6 +21,8 @@ DerivedData
 *.ipa
 *.xcuserstate
 **/.xcode.env.local
+#añadidooo
+ios/Pods/
 
 # Android/IntelliJ
 #
@@ -34,41 +36,42 @@ local.properties
 *.keystore
 !debug.keystore
 .kotlin/
+#añadidooo
+android/app/build/
 
 # node.js
 #
 node_modules/
 npm-debug.log
 yarn-error.log
+#añadidooo
+package-lock.json
 
 # fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
 **/fastlane/report.xml
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
 
-# Bundle artifact
+
+# Metro
+.metro-health-check*
 *.jsbundle
+
+# Testing
+jest-cache/
 
 # Ruby / CocoaPods
 **/Pods/
 /vendor/bundle/
 
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
 
 # testing
 /coverage
 
 # Yarn
 .yarn/*
-!.yarn/patches
+!.yarn/patchess
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
