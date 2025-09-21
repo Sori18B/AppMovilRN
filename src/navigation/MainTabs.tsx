@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Screens
@@ -29,6 +29,14 @@ export default function MainTabs() {
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size} color={color} />
           ),
+          // Icono en el header
+          headerTitle: () => (
+            <Image
+              source={require('./../assets/images/logoIcon.png')}
+              style={{ width: 120, height: 40, resizeMode: 'contain' }}
+            />
+          ),
+          headerTitleAlign: 'center',
         }}
       />
       <Tab.Screen
