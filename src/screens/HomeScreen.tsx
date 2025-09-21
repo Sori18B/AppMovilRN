@@ -122,6 +122,7 @@ export default function HomeScreen() {
   );
 
   return (
+<<<<<<< HEAD
     <View style={styles.container}>
       {/* Header que desaparece completamente */}
       <Animated.View style={[
@@ -160,6 +161,12 @@ export default function HomeScreen() {
           ))}
         </View>
       </Animated.ScrollView>
+=======
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Prueba Icono:</Text>
+      <Icon name="home" size={50} color="blue" />
+      <Icon name="home" size={50} color="purple" />
+>>>>>>> 6d1041d (Patallas de Login y registro unicamente diseño, se agrego la carpeta assets e images con el logo)
     </View>
   );
 }
