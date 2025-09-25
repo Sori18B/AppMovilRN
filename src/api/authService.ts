@@ -87,6 +87,45 @@ const isLoggedIn = async (): Promise<boolean> => {
     return false;
   }
 };
+/**
+ * Función para obtener los datos del usuario autenticado
+ * @returns Promise<UserData> - Respuesta del servidor con los datos del usuario
+ */
+const getUserData = async () => {
+  try {
+    const response = await httpClient.get('/user/getUser'); // Endpoint para obtener los datos del usuario
+    return response.data;
+  } catch (error) {
+    console.error("Error en el servicio para obtener datos del usuario:", error);
+    throw error;
+  }
+};
 
-// Exportamos las funciones
-export { register, login, logout, isLoggedIn };
+// Define el tipo de usuario (lo mismo que tienes en UpdateUserScreen)
+export interface UserData {
+  id: string; 
+  name: string;
+  email: string;
+  lastName: string;
+  phoneNumber: string;
+}
+
+/**
+ * Actualizar datos del usuario
+ * @param userId ID del usuario
+ * @param data Datos a actualizar (pueden ser parciales)
+ */
+const updateUserData = async (
+  userId: string,
+  data: Partial<UserData>
+): Promise<UserData> => {
+  try {
+    const response = await httpClient.put(`/users/profile/${userId}`, data);
+    return response.data as UserData;
+  } catch (error) {
+    console.error("Error en el servicio de actualización de usuario:", error);
+    throw error;
+  }
+};
+
+export { register, login, logout, isLoggedIn, getUserData, updateUserData };

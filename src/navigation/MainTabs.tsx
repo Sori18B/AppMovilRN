@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ProfileStack from './ProfileStack';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -60,8 +61,8 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="ProfileTab" // Puedes cambiarle el nombre
+        component={ProfileStack} // <- Usa el nuevo navegador aquí
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (

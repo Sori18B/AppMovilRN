@@ -1,10 +1,12 @@
+
 export enum AddressType {
     BILLING = "BILLING",
     SHIPPING = "SHIPPING",
     BOTH = "BOTH",
   }
 
-export interface Address {
+
+export interface AddressRequest {
     addressType: AddressType;
     firstName: string;
     lastName: string;
@@ -16,4 +18,4 @@ export interface Address {
     countryCode: string;
     isBillingDefault: boolean;
     isShippingDefault: boolean;
-  }
+}
