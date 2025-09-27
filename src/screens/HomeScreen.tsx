@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, Dimensions, TouchableOpacity, Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = (width - 40) / 2;

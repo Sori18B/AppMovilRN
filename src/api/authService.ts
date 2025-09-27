@@ -14,17 +14,17 @@ import { LoginResponse } from '../types/loginResponse.interface';
  */
 const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
   try {
-    console.log("Iniciando registro...");
-    console.log("Datos:", JSON.stringify(data, null, 2));
-    
+    console.log('Iniciando registro...');
+    console.log('Datos:', JSON.stringify(data, null, 2));
+
     const response = await httpClient.post<RegisterResponse>('/users', data);
-    
-    console.log("Registro exitoso:", response.data);
+
+    console.log('Registro exitoso:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error("Error en el servicio de registro:", error);
-    console.error("Error message:", error.message);
-    console.error("Error code:", error.code);
+    console.error('Error en el servicio de registro:', error);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
     throw error;
   }
 };
@@ -37,23 +37,27 @@ const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
 const login = async (data: LoginRequest): Promise<LoginResponse> => {
   try {
     const response = await httpClient.post<LoginResponse>('/auth/login', data);
-    
     // Si el login es exitoso y recibimos un token...
     if (response.data?.access_token) {
       try {
         // Guardamos el token en el Keychain de forma segura
-        await Keychain.setGenericPassword('userToken', response.data.access_token);
+        await Keychain.setGenericPassword(
+          'userToken',
+          response.data.access_token,
+        );
         console.log('✅ Token guardado en Keychain exitosamente');
       } catch (keychainError) {
         console.error('❌ Error al guardar token en Keychain:', keychainError);
         // Si Keychain falla, el login también debe fallar
-        throw new Error('No se pudo guardar la sesión de forma segura. Intenta de nuevo.');
+        throw new Error(
+          'No se pudo guardar la sesión de forma segura. Intenta de nuevo.',
+        );
       }
     }
-    
+
     return response.data;
   } catch (error) {
-    console.error("Error en el servicio de login:", error);
+    console.error('Error en el servicio de login:', error);
     throw error;
   }
 };
@@ -67,9 +71,11 @@ const logout = async (): Promise<void> => {
     await Keychain.resetGenericPassword();
     console.log('✅ Token eliminado del Keychain exitosamente');
   } catch (error) {
-    console.error("❌ Error al cerrar sesión (Keychain):", error);
+    console.error('❌ Error al cerrar sesión (Keychain):', error);
     // Si Keychain falla, el logout también debe fallar
-    throw new Error('No se pudo cerrar la sesión de forma segura. Intenta de nuevo.');
+    throw new Error(
+      'No se pudo cerrar la sesión de forma segura. Intenta de nuevo.',
+    );
   }
 };
 
@@ -82,7 +88,7 @@ const isLoggedIn = async (): Promise<boolean> => {
     const credentials = await Keychain.getGenericPassword();
     return !!credentials;
   } catch (error) {
-    console.error("❌ Error al verificar sesión (Keychain):", error);
+    console.error('❌ Error al verificar sesión (Keychain):', error);
     // Si hay problemas con Keychain, asumir que no está logueado
     return false;
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Animated,
 } from 'react-native';
 import { register } from '../api/authService';
 import { RegisterRequest } from '../types/registerRequest.interface';
@@ -73,7 +75,8 @@ export default function RegisterScreen({ navigation }: any) {
 
     // Validar campos personales
     if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-    if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es requerido';
+    if (!formData.lastName.trim())
+      newErrors.lastName = 'El apellido es requerido';
     if (!formData.email.trim()) {
       newErrors.email = 'El email es requerido';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -89,13 +92,20 @@ export default function RegisterScreen({ navigation }: any) {
     }
 
     // Validar campos de dirección
-    if (!formData.address.firstName.trim()) newErrors.addressFirstName = 'El nombre de dirección es requerido';
-    if (!formData.address.lastName.trim()) newErrors.addressLastName = 'El apellido de dirección es requerido';
-    if (!formData.address.street.trim()) newErrors.street = 'La calle es requerida';
-    if (!formData.address.city.trim()) newErrors.city = 'La ciudad es requerida';
-    if (!formData.address.state.trim()) newErrors.state = 'El estado es requerido';
-    if (!formData.address.postalCode.trim()) newErrors.postalCode = 'El código postal es requerido';
-    if (!formData.address.countryCode.trim()) newErrors.countryCode = 'El código de país es requerido';
+    if (!formData.address.firstName.trim())
+      newErrors.addressFirstName = 'El nombre de dirección es requerido';
+    if (!formData.address.lastName.trim())
+      newErrors.addressLastName = 'El apellido de dirección es requerido';
+    if (!formData.address.street.trim())
+      newErrors.street = 'La calle es requerida';
+    if (!formData.address.city.trim())
+      newErrors.city = 'La ciudad es requerida';
+    if (!formData.address.state.trim())
+      newErrors.state = 'El estado es requerido';
+    if (!formData.address.postalCode.trim())
+      newErrors.postalCode = 'El código postal es requerido';
+    if (!formData.address.countryCode.trim())
+      newErrors.countryCode = 'El código de país es requerido';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -111,7 +121,6 @@ export default function RegisterScreen({ navigation }: any) {
     setLoading(true);
     try {
       const response = await register(formData);
-      
       Alert.alert(
         'Registro exitoso',
         'Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.',
@@ -120,75 +129,132 @@ export default function RegisterScreen({ navigation }: any) {
             text: 'OK',
             onPress: () => navigation.navigate('Login'),
           },
-        ]
+        ],
       );
     } catch (error: any) {
       console.error('Error en registro:', error);
-      
+
       let errorMessage = 'Error al registrar. Intenta de nuevo.';
       let errorTitle = 'Error';
-      
+
       // Manejo específico de errores HTTP
       if (error.response) {
         const status = error.response.status;
         const responseData = error.response.data;
-        
+
         switch (status) {
           case 400:
             errorTitle = 'Datos inválidos';
-            errorMessage = 'Por favor verifica que todos los campos estén completos y sean correctos.';
+            errorMessage =
+              'Por favor verifica que todos los campos estén completos y sean correctos.';
             break;
           case 409:
             errorTitle = 'Usuario ya existe';
-            errorMessage = 'Ya existe una cuenta con este email. Intenta iniciar sesión o usa otro email.';
+            errorMessage =
+              'Ya existe una cuenta con este email. Intenta iniciar sesión o usa otro email.';
             break;
           case 422:
             errorTitle = 'Datos incompletos';
-            errorMessage = 'Faltan campos requeridos o los datos no son válidos.';
+            errorMessage =
+              'Faltan campos requeridos o los datos no son válidos.';
             break;
           case 500:
             errorTitle = 'Error del servidor';
-            errorMessage = 'Error interno del servidor. Intenta de nuevo más tarde.';
+            errorMessage =
+              'Error interno del servidor. Intenta de nuevo más tarde.';
             break;
           default:
             // Usar mensaje del servidor si está disponible
             if (responseData?.message) {
               const message = responseData.message;
-              errorMessage = Array.isArray(message) ? message.join(', ') : String(message);
+              errorMessage = Array.isArray(message)
+                ? message.join(', ')
+                : String(message);
             }
         }
-      } else if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+      } else if (
+        error.code === 'NETWORK_ERROR' ||
+        error.message?.includes('Network Error')
+      ) {
         errorTitle = 'Error de conexión';
-        errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta de nuevo.';
+        errorMessage =
+          'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta de nuevo.';
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert(errorTitle, errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // Animaciones de inicio de sesion
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const FormAnimate = useRef(new Animated.Value(500)).current;
+
+  useEffect(() => {
+    Animated.timing(FormAnimate, {
+      toValue: 0,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.formContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View
+          style={[
+            styles.formContainer,
+            { transform: [{ translateY: FormAnimate }] },
+          ]}
+        >
+          <Animated.Image
+            source={require('../assets/images/logoIcon.png')}
+            style={[
+              styles.Image,
+              { opacity: fadeAnim, transform: [{ scale: bounceAnim }] },
+            ]}
+          />
+
           <Text style={styles.title}>Crear Cuenta</Text>
-          <Text style={styles.subtitle}>Completa tus datos para registrarte</Text>
+          <Text style={styles.subtitle}>
+            Completa tus datos para registrarte
+          </Text>
 
           {/* Información Personal */}
           <Text style={styles.sectionTitle}>Información Personal</Text>
-          
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Nombre *</Text>
             <TextInput
               style={[styles.input, errors.name && styles.inputError]}
               value={formData.name}
-              onChangeText={(value) => updateField('name', value)}
+              onChangeText={value => updateField('name', value)}
               placeholder="Ingresa tu nombre"
               autoCapitalize="words"
             />
@@ -200,11 +266,13 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.lastName && styles.inputError]}
               value={formData.lastName}
-              onChangeText={(value) => updateField('lastName', value)}
+              onChangeText={value => updateField('lastName', value)}
               placeholder="Ingresa tu apellido"
               autoCapitalize="words"
             />
-            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+            {errors.lastName && (
+              <Text style={styles.errorText}>{errors.lastName}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -212,12 +280,14 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.email && styles.inputError]}
               value={formData.email}
-              onChangeText={(value) => updateField('email', value)}
+              onChangeText={value => updateField('email', value)}
               placeholder="tu@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -225,11 +295,13 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.password && styles.inputError]}
               value={formData.password}
-              onChangeText={(value) => updateField('password', value)}
+              onChangeText={value => updateField('password', value)}
               placeholder="Mínimo 8 caracteres"
               secureTextEntry
             />
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -237,11 +309,13 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.phoneNumber && styles.inputError]}
               value={formData.phoneNumber}
-              onChangeText={(value) => updateField('phoneNumber', value)}
+              onChangeText={value => updateField('phoneNumber', value)}
               placeholder="1234567890"
               keyboardType="phone-pad"
             />
-            {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
+            {errors.phoneNumber && (
+              <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+            )}
           </View>
 
           {/* Información de Dirección */}
@@ -250,25 +324,35 @@ export default function RegisterScreen({ navigation }: any) {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Nombre para dirección *</Text>
             <TextInput
-              style={[styles.input, errors.addressFirstName && styles.inputError]}
+              style={[
+                styles.input,
+                errors.addressFirstName && styles.inputError,
+              ]}
               value={formData.address.firstName}
-              onChangeText={(value) => updateField('firstName', value, true)}
+              onChangeText={value => updateField('firstName', value, true)}
               placeholder="Nombre para envío"
               autoCapitalize="words"
             />
-            {errors.addressFirstName && <Text style={styles.errorText}>{errors.addressFirstName}</Text>}
+            {errors.addressFirstName && (
+              <Text style={styles.errorText}>{errors.addressFirstName}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Apellido para dirección *</Text>
             <TextInput
-              style={[styles.input, errors.addressLastName && styles.inputError]}
+              style={[
+                styles.input,
+                errors.addressLastName && styles.inputError,
+              ]}
               value={formData.address.lastName}
-              onChangeText={(value) => updateField('lastName', value, true)}
+              onChangeText={value => updateField('lastName', value, true)}
               placeholder="Apellido para envío"
               autoCapitalize="words"
             />
-            {errors.addressLastName && <Text style={styles.errorText}>{errors.addressLastName}</Text>}
+            {errors.addressLastName && (
+              <Text style={styles.errorText}>{errors.addressLastName}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -276,10 +360,12 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.street && styles.inputError]}
               value={formData.address.street}
-              onChangeText={(value) => updateField('street', value, true)}
+              onChangeText={value => updateField('street', value, true)}
               placeholder="Calle Principal 123"
             />
-            {errors.street && <Text style={styles.errorText}>{errors.street}</Text>}
+            {errors.street && (
+              <Text style={styles.errorText}>{errors.street}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -287,7 +373,7 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               value={formData.address.neighborhood || ''}
-              onChangeText={(value) => updateField('neighborhood', value, true)}
+              onChangeText={value => updateField('neighborhood', value, true)}
               placeholder="Colonia"
             />
           </View>
@@ -297,7 +383,7 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.city && styles.inputError]}
               value={formData.address.city}
-              onChangeText={(value) => updateField('city', value, true)}
+              onChangeText={value => updateField('city', value, true)}
               placeholder="Ciudad de México"
             />
             {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
@@ -308,10 +394,12 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.state && styles.inputError]}
               value={formData.address.state}
-              onChangeText={(value) => updateField('state', value, true)}
+              onChangeText={value => updateField('state', value, true)}
               placeholder="CDMX"
             />
-            {errors.state && <Text style={styles.errorText}>{errors.state}</Text>}
+            {errors.state && (
+              <Text style={styles.errorText}>{errors.state}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -319,11 +407,13 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.postalCode && styles.inputError]}
               value={formData.address.postalCode}
-              onChangeText={(value) => updateField('postalCode', value, true)}
+              onChangeText={value => updateField('postalCode', value, true)}
               placeholder="12345"
               keyboardType="numeric"
             />
-            {errors.postalCode && <Text style={styles.errorText}>{errors.postalCode}</Text>}
+            {errors.postalCode && (
+              <Text style={styles.errorText}>{errors.postalCode}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -331,12 +421,14 @@ export default function RegisterScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, errors.countryCode && styles.inputError]}
               value={formData.address.countryCode}
-              onChangeText={(value) => updateField('countryCode', value, true)}
+              onChangeText={value => updateField('countryCode', value, true)}
               placeholder="MX"
               autoCapitalize="characters"
               maxLength={2}
             />
-            {errors.countryCode && <Text style={styles.errorText}>{errors.countryCode}</Text>}
+            {errors.countryCode && (
+              <Text style={styles.errorText}>{errors.countryCode}</Text>
+            )}
           </View>
 
           {/* Botón de registro */}
@@ -356,10 +448,11 @@ export default function RegisterScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.loginLinkText}>
-              ¿Ya tienes cuenta? <Text style={styles.loginLinkTextBold}>Inicia sesión</Text>
+              ¿Ya tienes cuenta?{' '}
+              <Text style={styles.loginLinkTextBold}>Inicia sesión</Text>
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -368,14 +461,26 @@ export default function RegisterScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    width: '100%',
+    height: '100%',
   },
   scrollView: {
     flex: 1,
+    width: '110%',
+    paddingHorizontal: 20,
   },
   formContainer: {
-    padding: 20,
-    paddingBottom: 40,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 30,
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'center',
   },
   title: {
     fontSize: 28,
@@ -398,7 +503,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   inputContainer: {
-    marginBottom: 15,
+    width: '100%',
+    height: 40,
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 40,
+    borderColor: 'white',
+    alignContent: 'center',
+    justifyContent: 'space-between',
   },
   label: {
     fontSize: 16,
@@ -407,12 +519,18 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    width: '100%',
+    height: 40,
+    borderColor: 'black',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    color: 'black',
     fontSize: 16,
-    backgroundColor: '#fff',
+    fontWeight: 'bold',
+    shadowColor: '#000',
   },
   inputError: {
     borderColor: '#ff4444',
@@ -423,11 +541,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   registerButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: 'black',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
     marginTop: 20,
-    marginBottom: 15,
+    width: '100%',
+    alignItems: 'center',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -449,5 +569,11 @@ const styles = StyleSheet.create({
   loginLinkTextBold: {
     color: '#007AFF',
     fontWeight: '600',
+  },
+  Image: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    resizeMode: 'contain',
   },
 });

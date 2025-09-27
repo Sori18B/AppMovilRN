@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
+
 import {
   View,
   Text,
@@ -8,6 +10,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { login } from '../api/authService';
@@ -68,36 +72,34 @@ export default function LoginScreen({ navigation }: any) {
     setLoading(true);
     try {
       const response = await login(formData);
-      
-      Alert.alert(
-        'Login exitoso',
-        '¡Bienvenido de nuevo!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.replace('MainTabs'),
-          },
-        ]
-      );
+
+      Alert.alert('Login exitoso', '¡Bienvenido de nuevo!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.replace('MainTabs'),
+        },
+      ]);
     } catch (error: any) {
       console.error('Error en login:', error);
-      
+
       let errorMessage = 'Error al iniciar sesión. Intenta de nuevo.';
       let errorTitle = 'Error';
-      
+
       // Manejo específico de errores HTTP
       if (error.response) {
         const status = error.response.status;
         const responseData = error.response.data;
-        
+
         switch (status) {
           case 401:
             errorTitle = 'Credenciales incorrectas';
-            errorMessage = 'El email o la contraseña son incorrectos. Verifica tus datos e intenta de nuevo.';
+            errorMessage =
+              'El email o la contraseña son incorrectos. Verifica tus datos e intenta de nuevo.';
             break;
           case 400:
             errorTitle = 'Datos inválidos';
-            errorMessage = 'Por favor verifica que el email y contraseña sean correctos.';
+            errorMessage =
+              'Por favor verifica que el email y contraseña sean correctos.';
             break;
           case 404:
             errorTitle = 'Usuario no encontrado';
@@ -105,39 +107,92 @@ export default function LoginScreen({ navigation }: any) {
             break;
           case 500:
             errorTitle = 'Error del servidor';
-            errorMessage = 'Error interno del servidor. Intenta de nuevo más tarde.';
+            errorMessage =
+              'Error interno del servidor. Intenta de nuevo más tarde.';
             break;
           default:
             // Usar mensaje del servidor si está disponible
             if (responseData?.message) {
               const message = responseData.message;
-              errorMessage = Array.isArray(message) ? message.join(', ') : String(message);
+              errorMessage = Array.isArray(message)
+                ? message.join(', ')
+                : String(message);
             }
         }
-      } else if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+      } else if (
+        error.code === 'NETWORK_ERROR' ||
+        error.message?.includes('Network Error')
+      ) {
         errorTitle = 'Error de conexión';
-        errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta de nuevo.';
-      } else if (error.message?.includes('No se pudo guardar la sesión de forma segura')) {
+        errorMessage =
+          'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta de nuevo.';
+      } else if (
+        error.message?.includes('No se pudo guardar la sesión de forma segura')
+      ) {
         errorTitle = 'Error de seguridad';
-        errorMessage = 'No se pudo guardar tu sesión de forma segura. Esto puede deberse a un problema con la configuración del dispositivo. Intenta de nuevo o contacta soporte.';
+        errorMessage =
+          'No se pudo guardar tu sesión de forma segura. Esto puede deberse a un problema con la configuración del dispositivo. Intenta de nuevo o contacta soporte.';
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert(errorTitle, errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // Animaciones de inicio de sesion
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const FormAnimate = useRef(new Animated.Value(500)).current;
+
+  useEffect(() => {
+    Animated.timing(FormAnimate, {
+      toValue: 0,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.formContainer}>
+      <Animated.View
+        style={[
+          styles.formContainer,
+          { transform: [{ translateY: FormAnimate }] },
+        ]}
+      >
+        <Animated.Image
+          source={require('../assets/images/logoIcon.png')}
+          style={[
+            styles.Image,
+            { opacity: fadeAnim, transform: [{ scale: bounceAnim }] },
+          ]}
+        />
         <Text style={styles.title}>Iniciar Sesión</Text>
-        <Text style={styles.subtitle}>Ingresa tus credenciales para continuar</Text>
+        <Text style={styles.subtitle}>
+          Ingresa tus credenciales para continuar
+        </Text>
 
         {/* Campo Email */}
         <View style={styles.inputContainer}>
@@ -145,8 +200,8 @@ export default function LoginScreen({ navigation }: any) {
           <TextInput
             style={[styles.input, errors.email && styles.inputError]}
             value={formData.email}
-            onChangeText={(value) => updateField('email', value)}
-            placeholder="tu@email.com"
+            onChangeText={value => updateField('email', value)}
+            placeholder="Ejemplo@email.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -157,11 +212,19 @@ export default function LoginScreen({ navigation }: any) {
         {/* Campo Password */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Contraseña</Text>
-          <View style={[styles.passwordContainer, errors.password && styles.passwordContainerError]}>
+          <View
+            style={[
+              styles.passwordContainer,
+              errors.password && styles.passwordContainerError,
+            ]}
+          >
             <TextInput
-              style={[styles.passwordInput, errors.password && styles.inputError]}
+              style={[
+                styles.passwordInput,
+                errors.password && styles.inputError,
+              ]}
               value={formData.password}
-              onChangeText={(value) => updateField('password', value)}
+              onChangeText={value => updateField('password', value)}
               placeholder="Ingresa tu contraseña"
               secureTextEntry={!showPassword}
             />
@@ -176,7 +239,9 @@ export default function LoginScreen({ navigation }: any) {
               />
             </TouchableOpacity>
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          )}
         </View>
 
         {/* Botón de login */}
@@ -196,10 +261,11 @@ export default function LoginScreen({ navigation }: any) {
           onPress={() => navigation.navigate('Register')}
         >
           <Text style={styles.registerLinkText}>
-            ¿No tienes cuenta? <Text style={styles.registerLinkTextBold}>Regístrate</Text>
+            ¿No tienes cuenta?{' '}
+            <Text style={styles.registerLinkTextBold}>Regístrate</Text>
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
@@ -212,7 +278,12 @@ const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 30,
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'center',
   },
   title: {
     fontSize: 28,
@@ -228,7 +299,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   inputContainer: {
-    marginBottom: 20,
+    width: '100%',
+    height: 40,
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 40,
+    borderColor: 'white',
+    alignContent: 'center',
+    justifyContent: 'space-between',
   },
   label: {
     fontSize: 16,
@@ -237,20 +315,35 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    width: '100%',
+    height: 50,
+    borderColor: 'black',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    color: 'black',
     fontSize: 16,
-    backgroundColor: '#fff',
+    fontWeight: 'bold',
+    shadowColor: '#000',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
+
+    width: '100%',
+    height: 50,
+    borderColor: 'black',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+    shadowColor: '#000',
   },
   passwordInput: {
     flex: 1,
@@ -275,11 +368,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   loginButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'black',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
     padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-    marginBottom: 20,
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -294,11 +390,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   registerLinkText: {
+    padding: 20,
     fontSize: 16,
     color: '#666',
   },
   registerLinkTextBold: {
     color: '#007AFF',
     fontWeight: '600',
+  },
+  Image: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    resizeMode: 'contain',
   },
 });
