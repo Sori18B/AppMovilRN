@@ -9,8 +9,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Image,
   Animated,
+  ToastAndroid,
 } from 'react-native';
 import { register } from '../api/authService';
 import { RegisterRequest } from '../types/registerRequest.interface';
@@ -41,6 +41,14 @@ export default function RegisterScreen({ navigation }: any) {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isMounted = useRef(true);
+
+  // Cleanup cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Función para actualizar campos del formulario
   const updateField = (field: string, value: string, isAddress = false) => {
@@ -113,24 +121,32 @@ export default function RegisterScreen({ navigation }: any) {
 
   // Función para manejar el registro
   const handleRegister = async () => {
+    console.log('🔄 Iniciando proceso de registro...');
+    
     if (!validateForm()) {
-      Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+      console.log('❌ Validación fallida');
+      if (isMounted.current) {
+        setTimeout(() => {
+          if (isMounted.current) {
+            Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+          }
+        }, 100);
+      }
       return;
     }
 
+    console.log('✅ Validación exitosa, enviando datos...');
     setLoading(true);
     try {
-      const response = await register(formData);
-      Alert.alert(
-        'Registro exitoso',
-        'Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ],
-      );
+      await register(formData);
+      console.log('✅ Registro exitoso, navegando al login...');
+      
+      // Mostrar mensaje de éxito y navegar
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Registro exitoso! Ahora puedes iniciar sesión.', ToastAndroid.LONG);
+      }
+      
+      navigation.navigate('Login');
     } catch (error: any) {
       console.error('Error en registro:', error);
 
@@ -183,7 +199,14 @@ export default function RegisterScreen({ navigation }: any) {
         errorMessage = error.message;
       }
 
-      Alert.alert(errorTitle, errorMessage);
+      // Usar setTimeout para el Alert de error también
+      if (isMounted.current) {
+        setTimeout(() => {
+          if (isMounted.current) {
+            Alert.alert(errorTitle, errorMessage);
+          }
+        }, 100);
+      }
     } finally {
       setLoading(false);
     }
