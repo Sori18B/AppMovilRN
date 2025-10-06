@@ -37,7 +37,6 @@ const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
 const login = async (data: LoginRequest): Promise<LoginResponse> => {
   try {
     const response = await httpClient.post<LoginResponse>('/auth/login', data);
-
     // Si el login es exitoso y recibimos un token...
     if (response.data?.access_token) {
       try {

@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
+
 import {
   View,
   Text,
@@ -10,6 +12,7 @@ import {
   Platform,
   Image,
   Animated,
+  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { login } from '../api/authService';
@@ -25,6 +28,14 @@ export default function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const isMounted = useRef(true);
+
+  // Cleanup cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Función para actualizar campos del formulario
   const updateField = (field: keyof LoginRequest, value: string) => {
@@ -63,20 +74,27 @@ export default function LoginScreen({ navigation }: any) {
   // Función para manejar el login
   const handleLogin = async () => {
     if (!validateForm()) {
-      Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+      if (isMounted.current) {
+        setTimeout(() => {
+          if (isMounted.current) {
+            Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+          }
+        }, 100);
+      }
       return;
     }
 
     setLoading(true);
     try {
-      const response = await login(formData);
+      await login(formData);
+      console.log('✅ Login exitoso, navegando a MainTabs...');
 
-      Alert.alert('Login exitoso', '¡Bienvenido de nuevo!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.replace('MainTabs'),
-        },
-      ]);
+      // Mostrar mensaje de éxito y navegar
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('¡Bienvenido de nuevo!', ToastAndroid.SHORT);
+      }
+      
+      navigation.replace('MainTabs');
     } catch (error: any) {
       console.error('Error en login:', error);
 
@@ -134,7 +152,13 @@ export default function LoginScreen({ navigation }: any) {
         errorMessage = error.message;
       }
 
-      Alert.alert(errorTitle, errorMessage);
+      if (isMounted.current) {
+        setTimeout(() => {
+          if (isMounted.current) {
+            Alert.alert(errorTitle, errorMessage);
+          }
+        }, 100);
+      }
     } finally {
       setLoading(false);
     }
