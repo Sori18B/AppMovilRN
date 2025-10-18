@@ -56,4 +56,22 @@ const updateAddressData = async (
   }
 };
 
+export const createAddress = async (
+  addressData: AddressRequest
+): Promise<Address> => {
+  try {
+    // 1. Petición POST: Enviamos los datos (addressData) como cuerpo (body) de la solicitud
+    const response = await httpClient.post('/users/address/', addressData);
+    
+    // 2. Devolvemos los datos creados (la nueva dirección) que vienen en la respuesta
+    return response.data as Address;
+    
+  } catch (error) {
+    console.error("Error en el servicio al crear la dirección:", error);
+    // Lanzamos el error para que sea manejado por el componente que llama a esta función
+    throw error;
+  }
+};
+
+
 export { getUserData, updateUserData, getAddresData, updateAddressData };

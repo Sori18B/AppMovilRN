@@ -8,6 +8,9 @@ import HomeScreen from '../screens/HomeScreen';
 import ProductListScreen from '../screens/ProductListScreen';
 import CartScreen from '../screens/CartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ProfileInformationScreen from '../screens/ProfileInformationScreen';
+import ProfileStack from './ProfileStack';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -52,8 +55,8 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="ProfileInformation"
+        component={ProfileStack}
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
