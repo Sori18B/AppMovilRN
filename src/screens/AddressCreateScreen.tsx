@@ -29,7 +29,7 @@ const INITIAL_FORM_DATA: AddressRequest = {
     countryCode: '',
     isBillingDefault: false,
     isShippingDefault: false,
-    addressType: AddressType.BILLING, // <-- corregido
+    addressType: AddressType.BILLING, 
 };
 
 export default function CreateAddressScreen({ navigation }: CreateAddressScreenProps) {
@@ -49,7 +49,7 @@ export default function CreateAddressScreen({ navigation }: CreateAddressScreenP
     setIsSubmitting(true);
     try {
       await createAddress(formData); 
-      Alert.alert("Éxito", "Nueva dirección creada correctamente 🎉");
+      Alert.alert("Éxito", "Nueva dirección creada correctamente ");
       navigation.goBack();
     } catch (err) {
       console.error(err);
@@ -72,4 +72,70 @@ export default function CreateAddressScreen({ navigation }: CreateAddressScreenP
       <TextInput
         style={styles.input}
         placeholder="Apellido"
-        value={formData.last
+        value={formData.lastName}
+        onChangeText={(text) => handleChange('lastName', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Calle y Número"
+        value={formData.street}
+        onChangeText={(text) => handleChange('street', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Colonia / Barrio (Opcional)"
+        value={formData.neighborhood}
+        onChangeText={(text) => handleChange('neighborhood', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Ciudad"
+        value={formData.city}
+        onChangeText={(text) => handleChange('city', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Estado"
+        value={formData.state}
+        onChangeText={(text) => handleChange('state', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Código Postal"
+        value={formData.postalCode}
+        onChangeText={(text) => handleChange('postalCode', text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Código de País (Ej. MX)"
+        value={formData.countryCode}
+        onChangeText={(text) => handleChange('countryCode', text)}
+      />
+
+
+
+      <Button
+        title={isSubmitting ? "Creando..." : "Crear Dirección"}
+        onPress={handleCreate}
+        disabled={isSubmitting}
+      />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  optionText: {
+    fontSize: 16,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+});
