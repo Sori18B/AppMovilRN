@@ -1,17 +1,43 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabScreenProps } from '@react-navigation/bottom-tabs'; // <-- CAMBIO 1
 import { StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { NativeStackScreenProps } from '@react-navigation/native-stack'; // <-- CAMBIO 2
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import ProductListScreen from '../screens/ProductListScreen';
 import CartScreen from '../screens/CartScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+// (No necesitas importar ProfileInformationScreen o ProfileScreen aquí)
+import ProfileStack from './ProfileStack';
 
-const Tab = createBottomTabNavigator();
+// --- CAMBIO 3: Define los parámetros del Stack Principal (de AppNavigator) ---
+// (Esto nos sirve para tipar 'route.params' de forma segura)
+type RootStackParamList = {
+  Welcome: undefined;
+  Login: undefined;
+  Register: undefined;
+  MainTabs: { userId: string }; // ¡Aquí le decimos que MainTabs recibe un userId!
+};
 
-export default function MainTabs() {
+// --- CAMBIO 4: Define los parámetros de ESTE Tab Navigator ---
+type MainTabsParamList = {
+  Home: undefined;
+  Products: undefined;
+  Cart: undefined;
+  ProfileTab: undefined; // La ruta del tab no necesita params, el stack que contiene sí
+};
+
+// --- CAMBIO 5: Define los props de ESTE componente (MainTabs) ---
+type MainTabsProps = NativeStackScreenProps<RootStackParamList, 'MainTabs'>;
+
+
+// --- CAMBIO 6: Pasa el tipo de tus tabs ---
+const Tab = createBottomTabNavigator<MainTabsParamList>();
+
+// --- CAMBIO 7: Usa el tipo MainTabsProps en lugar de 'any' ---
+export default function MainTabs({ route }: MainTabsProps) {
+  const { userId } = route.params; // <-- Ahora esto es 100% seguro y tipado
   return (
     <Tab.Navigator
       screenOptions={{
@@ -21,7 +47,7 @@ export default function MainTabs() {
         tabBarLabelStyle: styles.tabLabel
       }}
     >
-      <Tab.Screen
+       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
@@ -59,20 +85,25 @@ export default function MainTabs() {
           ),
         }}
       />
+      {/* --- ¡AQUÍ ESTÁ LA CORRECCIÓN A TU ERROR! --- */}
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="ProfileTab"
         options={{
           tabBarLabel: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon name="face" size={size} color={color} />
           ),
         }}
-      />
+      >
+        {/* --- CAMBIO 8: Añade el tipo a 'props' --- */}
+        {(props: BottomTabScreenProps<MainTabsParamList, 'ProfileTab'>) => (
+          <ProfileStack {...props} userID={userId} />
+        )}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
-
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#FFFFFF',

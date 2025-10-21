@@ -17,6 +17,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { login } from '../api/authService';
 import { LoginRequest } from '../types/loginRequest.interface';
+import { jwtDecode } from 'jwt-decode';
 
 export default function LoginScreen({ navigation }: any) {
   // Estados del formulario
@@ -86,15 +87,33 @@ export default function LoginScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await login(formData);
-      console.log('✅ Login exitoso, navegando a MainTabs...');
+      const loginResponse = await login(formData);
+      const token = loginResponse.access_token;
 
+      if (!token) {
+        throw new Error('El servidor no devolvió un token de acceso.');
+      }
+      const decodedToken: any = jwtDecode(token);
+// Esto nos mostrará en la consola todas las propiedades del token
+    console.log('--- TOKEN COMPLETO DECODIFICADO (JSON) ---', JSON.stringify(decodedToken, null, 2));
+      // (Buscamos 'id', 'sub' (estándar JWT), '_id' (MongoDB) o 'userId')
+    const userId = decodedToken.id || decodedToken.sub || decodedToken._id || decodedToken.userId ||decodedToken.userID;
+
+
+      console.log('✅ Login exitoso, navegando a MainTabs...');
+      console.log('LOGIN SCREEN: ID extraído del token:', userId);
+
+      // 8. Valida que SÍ encontramos un ID
+    if (!userId) {
+      console.error('No se pudo encontrar un ID de usuario (id, sub, _id, userId) en el token.');
+      throw new Error('El token es inválido o no contiene un ID de usuario.');
+    }
       // Mostrar mensaje de éxito y navegar
       if (Platform.OS === 'android') {
         ToastAndroid.show('¡Bienvenido de nuevo!', ToastAndroid.SHORT);
       }
+      navigation.replace('MainTabs', { userId: userId });
       
-      navigation.replace('MainTabs');
     } catch (error: any) {
       console.error('Error en login:', error);
 
