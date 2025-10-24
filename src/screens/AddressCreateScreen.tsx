@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "../navigation/ProfileStack";
 import { createAddress } from '../api/userService';
