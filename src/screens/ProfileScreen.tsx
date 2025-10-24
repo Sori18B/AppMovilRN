@@ -1,47 +1,96 @@
 
 import * as React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-
-
 import { ProfileStackParamList } from "../navigation/ProfileStack";
+import { ProfileMenuItem } from "../components/profile";
+import { colors } from "../theme";
 
 type Props = NativeStackScreenProps<ProfileStackParamList>;
 
 export default function ProfileScreen({ navigation }: Props) {
   const menuItems = [
-    { label: "Información Personal", route: "ProfileInformation" },
-    { label: "Direcciones", route: "Addresses" },
-    { label: "Mis compras", route: "Orders" },
-    { label: "Mis favoritos", route: "Favorites" },
-    { label: "Acerca de", route: "About" },
-    { label: "Aviso de privacidad", route: "Privacy" },
+    { 
+      label: "Información Personal", 
+      route: "ProfileInformation",
+      iconName: "person"
+    },
+    { 
+      label: "Direcciones", 
+      route: "Addresses",
+      iconName: "location-on"
+    },
+    { 
+      label: "Mis compras", 
+      route: "Orders",
+      iconName: "shopping-bag"
+    },
+    { 
+      label: "Mis favoritos", 
+      route: "Favorites",
+      iconName: "favorite"
+    },
+    { 
+      label: "Acerca de", 
+      route: "About",
+      iconName: "info"
+    },
+    { 
+      label: "Aviso de privacidad", 
+      route: "Privacy",
+      iconName: "privacy-tip"
+    },
   ];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>Eros</Text>
-      <View style={styles.divider} />
+    <ScrollView style={styles.container}>
+      <View style={styles.logoContainer}>
+        <View style={styles.logoBadge}>
+          <View style={styles.logoText}>
+            {/* Logo placeholder - puedes agregar tu logo aquí */}
+          </View>
+        </View>
+      </View>
 
-      {menuItems.map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          onPress={() => navigation.navigate(item.route as never)}
-          style={styles.menuItem}
-        >
-          <Text style={styles.menuText}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+      <View style={styles.menuContainer}>
+        {menuItems.map((item, index) => (
+          <ProfileMenuItem
+            key={index}
+            label={item.label}
+            iconName={item.iconName}
+            onPress={() => navigation.navigate(item.route as never)}
+          />
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  logo: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginTop: 10 },
-  greeting: { fontSize: 16, marginTop: 10 },
-  divider: { height: 1, backgroundColor: "#000", marginVertical: 20 },
-  menuItem: { paddingVertical: 12 },
-  menuText: { fontSize: 18, fontWeight: "500" },
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.background,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  logoBadge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoText: {
+    // Aquí puedes agregar tu logo o imagen
+  },
+  menuContainer: {
+    marginTop: 20,
+  },
 });
 

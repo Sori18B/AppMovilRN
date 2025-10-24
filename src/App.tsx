@@ -1,6 +1,13 @@
 import React from 'react';
+import { AuthProvider, CartProvider } from './contexts';
 import AppNavigator from './navigation/AppNavigator';
 
 export default function App() {
-  return <AppNavigator />;
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <AppNavigator />
+      </CartProvider>
+    </AuthProvider>
+  );
 }

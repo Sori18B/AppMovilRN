@@ -544,16 +544,16 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 40,
-    borderColor: 'black',
+    borderColor: '#7C3AED',
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    color: 'black',
+    color: '#2D3748',
     fontSize: 16,
     fontWeight: 'bold',
-    shadowColor: '#000',
+    shadowColor: '#7C3AED',
   },
   inputError: {
     borderColor: '#ff4444',
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   registerButton: {
-    backgroundColor: 'black',
+    backgroundColor: '#7C3AED',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#D1D5DB',
   },
   registerButtonText: {
     color: '#fff',
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   loginLinkTextBold: {
-    color: '#007AFF',
+    color: '#7C3AED',
     fontWeight: '600',
   },
   Image: {

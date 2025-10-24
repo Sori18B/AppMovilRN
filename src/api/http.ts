@@ -1,51 +1,83 @@
 import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
+import { API_URL } from '@env';
 
-// Instancia de Axios con la URL base jeje
+// Configuración del cliente HTTP
 const httpClient = axios.create({
-    baseURL: 'http://10.0.2.2:3000/',
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-      },
-  });
+  baseURL: API_URL || 'http://10.0.2.2:3000/',
+  timeout: 15000, // 15 segundos
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  // --- Middleware (pa cada petición) ---
-
-  httpClient.interceptors.request.use(
-    async (config) => {
-      try {
-        // Leemos el token que guardamos en el login
-        const credentials = await Keychain.getGenericPassword();
-        if (credentials) {
-          // Si hay un token, lo añadimos al objeto de configuración de la petición
-          config.headers.Authorization = `Bearer ${credentials.password}`;
-        }
-      } catch (error) {
-        console.error("❌ Error al obtener el token del Keychain:", error);
-        // No fallar la petición por problemas del Keychain
-        console.warn("⚠️ Continuando sin token de autenticación");
+// ==========================================
+// INTERCEPTOR DE PETICIONES
+// ==========================================
+httpClient.interceptors.request.use(
+  async (config) => {
+    try {
+      // Obtener token del Keychain
+      const credentials = await Keychain.getGenericPassword();
+      if (credentials && credentials.password) {
+        config.headers.Authorization = `Bearer ${credentials.password}`;
       }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
 
-  // Interceptor de respuesta para debugging
-  httpClient.interceptors.response.use(
-    (response) => {
-      console.log("✅ Respuesta recibida:", response.status, response.config.url);
-      return response;
-    },
-    (error) => {
-      console.error("Error en petición:", error.message);
-      console.error("URL:", error.config?.url);
-      console.error("Status:", error.response?.status);
-      console.error("Data:", error.response?.data);
-      return Promise.reject(error);
+      // Log de peticiones en desarrollo
+      if (__DEV__) {
+        console.log(`${config.method?.toUpperCase()} ${config.url}`);
+        if (config.data) {
+          console.log('Body:', JSON.stringify(config.data, null, 2));
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo obtener el token del Keychain');
+      // Continuar sin token - la API decidirá si es necesario
     }
-  );
+    return config;
+  },
+  (error) => {
+    console.error('Error en interceptor de petición:', error);
+    return Promise.reject(error);
+  }
+);
+
+// ==========================================
+// INTERCEPTOR DE RESPUESTAS
+// ==========================================
+httpClient.interceptors.response.use(
+  (response) => {
+    // Log de respuestas exitosas en desarrollo
+    if (__DEV__) {
+      console.log(`${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    }
+    return response;
+  },
+  (error) => {
+    // Log estructurado de errores
+    if (__DEV__) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('ERROR EN PETICIÓN HTTP');
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error(`URL: ${error.config?.url}`);
+      console.error(`Método: ${error.config?.method?.toUpperCase()}`);
+      console.error(`Status: ${error.response?.status || 'Sin respuesta'}`);
+      console.error(`Mensaje: ${error.message}`);
+      
+      if (error.response?.data) {
+        console.error('Data:', JSON.stringify(error.response.data, null, 2));
+      }
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    }
+
+    // Manejo especial de errores 401 (no autorizado)
+    if (error.response?.status === 401) {
+      // mejorarlo xd
+      console.warn('Sesión expirada o no autorizada');
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default httpClient;

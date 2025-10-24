@@ -1,47 +1,60 @@
 import React from 'react';
-import { createBottomTabNavigator, BottomTabScreenProps } from '@react-navigation/bottom-tabs'; // <-- CAMBIO 1
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { NativeStackScreenProps } from '@react-navigation/native-stack'; // <-- CAMBIO 2
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from './AppNavigator';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import ProductListScreen from '../screens/ProductListScreen';
 import CartScreen from '../screens/CartScreen';
-// (No necesitas importar ProfileInformationScreen o ProfileScreen aquí)
 import ProfileStack from './ProfileStack';
 
-// --- CAMBIO 3: Define los parámetros del Stack Principal (de AppNavigator) ---
-// (Esto nos sirve para tipar 'route.params' de forma segura)
-type RootStackParamList = {
-  Welcome: undefined;
-  Login: undefined;
-  Register: undefined;
-  MainTabs: { userId: string }; // ¡Aquí le decimos que MainTabs recibe un userId!
-};
-
-// --- CAMBIO 4: Define los parámetros de ESTE Tab Navigator ---
+// Define los parámetros de este Tab Navigator
 type MainTabsParamList = {
   Home: undefined;
   Products: undefined;
   Cart: undefined;
-  ProfileTab: undefined; // La ruta del tab no necesita params, el stack que contiene sí
+  ProfileTab: undefined;
 };
 
-// --- CAMBIO 5: Define los props de ESTE componente (MainTabs) ---
+// Define los props de este componente
 type MainTabsProps = NativeStackScreenProps<RootStackParamList, 'MainTabs'>;
 
-
-// --- CAMBIO 6: Pasa el tipo de tus tabs ---
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
-// --- CAMBIO 7: Usa el tipo MainTabsProps en lugar de 'any' ---
+// Componentes de íconos extraídos para evitar re-renders
+const HomeIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="home" size={size} color={color} />
+);
+
+const ProductsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="storefront" size={size} color={color} />
+);
+
+const CartIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="shopping-cart" size={size} color={color} />
+);
+
+const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="face" size={size} color={color} />
+);
+
+// Componente de header con logo
+const HeaderLogo = () => (
+  <Image
+    source={require('./../assets/images/logoIcon.png')}
+    style={styles.headerLogo}
+  />
+);
+
 export default function MainTabs({ route }: MainTabsProps) {
-  const { userId } = route.params; // <-- Ahora esto es 100% seguro y tipado
+  const { userId } = route.params;
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#1D4ED8',
+        tabBarActiveTintColor: '#7C3AED',
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel
@@ -52,16 +65,8 @@ export default function MainTabs({ route }: MainTabsProps) {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home" size={size} color={color} />
-          ),
-          // Icono en el header
-          headerTitle: () => (
-            <Image
-              source={require('./../assets/images/logoIcon.png')}
-              style={{ width: 120, height: 40, resizeMode: 'contain' }}
-            />
-          ),
+          tabBarIcon: HomeIcon,
+          headerTitle: HeaderLogo,
           headerTitleAlign: 'center',
         }}
       />
@@ -70,9 +75,7 @@ export default function MainTabs({ route }: MainTabsProps) {
         component={ProductListScreen}
         options={{
           tabBarLabel: 'Products',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="storefront" size={size} color={color} />
-          ),
+          tabBarIcon: ProductsIcon,
         }}
       />
       <Tab.Screen
@@ -81,30 +84,23 @@ export default function MainTabs({ route }: MainTabsProps) {
         options={{
           tabBarLabel: 'Cart',
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="shopping-cart" size={size} color={color} />
-          ),
+          tabBarIcon: CartIcon,
         }}
       />
-      {/* --- ¡AQUÍ ESTÁ LA CORRECCIÓN A TU ERROR! --- */}
       <Tab.Screen
         name="ProfileTab"
         options={{
           tabBarLabel: 'Profile',
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="face" size={size} color={color} />
-          ),
+          tabBarIcon: ProfileIcon,
         }}
       >
-        {/* --- CAMBIO 8: Añade el tipo a 'props' --- */}
-        {(props: BottomTabScreenProps<MainTabsParamList, 'ProfileTab'>) => (
-          <ProfileStack {...props} userID={userId} />
-        )}
+        {() => <ProfileStack userID={userId} />}
       </Tab.Screen>
     </Tab.Navigator>
   );
 }
+
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#FFFFFF',
@@ -117,5 +113,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  headerLogo: {
+    width: 120,
+    height: 40,
+    resizeMode: 'contain',
   },
 });

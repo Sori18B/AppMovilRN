@@ -8,7 +8,15 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 
-const Stack = createNativeStackNavigator();
+// Define los tipos de parámetros del Stack
+export type RootStackParamList = {
+  Welcome: undefined;
+  Login: undefined;
+  Register: undefined;
+  MainTabs: { userId: string };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (

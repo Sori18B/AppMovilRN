@@ -1,107 +1,163 @@
 import httpClient from './http';
-import * as Keychain from 'react-native-keychain';
-import { ProductRequest} from '../types/productequest.interface';
+import { handleApiError, logApiError } from '../utils';
 import { ProductResponse } from '../types/product.response.interface';
 import { CategoryResponse } from '../types/product.response.interface';
 import { GenderResponse } from '../types/product.response.interface';
 
-
-
-
-
-
-
-
-//obtenemos productos acttivos
+//obtenemos productos activos
 const getProductdata = async (): Promise<ProductResponse> => {
-    try {
-      const response = await httpClient.get<ProductResponse>('/products');
-      return response.data;
-    } catch (error) {
-      console.error("Error para obtener los productos:", error);
-      throw error;
+  try {
+    const response = await httpClient.get<ProductResponse>('/products');
+
+    if (!response.data) {
+      throw new Error('No se recibieron productos del servidor');
     }
+
+    console.log('Productos obtenidos exitosamente');
+    return response.data;
+  } catch (error) {
+    logApiError('OBTENER PRODUCTOS', error);
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
+  }
 };
 
-//funcion para obtener un producto especifico por id
-const getProductId = async (productID : string): Promise<ProductResponse> =>{
+//Obtiene un producto específico por ID
+const getProductId = async (productID: string): Promise<ProductResponse> => {
   try {
-    // CAMBIOS: "users" (plural) y se añade el /${userId}
+    if (!productID) {
+      throw new Error('El ID del producto es requerido');
+    }
+
     const response = await httpClient.get<ProductResponse>(`/products/${productID}`);
+
+    if (!response.data) {
+      throw new Error('Producto no encontrado');
+    }
+
+    console.log(`Producto ${productID} obtenido exitosamente`);
     return response.data;
   } catch (error) {
-    console.error("Error al obtener el producto:", error);
-    throw error;
+    logApiError('OBTENER PRODUCTO', error, { productID });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
-}
-//obtenemos todas las categorias
-const getCategories = async (): Promise<CategoryResponse> =>{
+};
+
+//Obtiene todas las categorías disponibles con contador de productos
+const getCategories = async (): Promise<CategoryResponse> => {
   try {
-  
-    const response = await httpClient.get<CategoryResponse>(`/products/categories/all`);
+    const response = await httpClient.get<CategoryResponse>('/products/categories/all');
+
+    if (!response.data) {
+      throw new Error('No se recibieron categorías del servidor');
+    }
+
+    console.log('Categorías obtenidas exitosamente');
     return response.data;
   } catch (error) {
-    console.error("Error al obtener las categorias:", error);
-    throw error;
+    logApiError('OBTENER CATEGORÍAS', error);
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
-}
+};
 
-//obtener categoria especifica de un producto 
-
-const getCategoryId = async (categoryID:string): Promise<CategoryResponse> =>{
+//Obtiene una categoría específica por ID
+const getCategoryId = async (categoryID: string): Promise<CategoryResponse> => {
   try {
-    
-    const response = await httpClient.get<CategoryResponse>(`/products/categories/${categoryID}`)
+    if (!categoryID) {
+      throw new Error('El ID de categoría es requerido');
+    }
+
+    const response = await httpClient.get<CategoryResponse>(
+      `/products/categories/${categoryID}`
+    );
+
+    if (!response.data) {
+      throw new Error('Categoría no encontrada');
+    }
+
+    console.log(`Categoría ${categoryID} obtenida exitosamente`);
     return response.data;
   } catch (error) {
-    console.error("Error al obtener los productos filtrados:", error);
-    throw error;
+    logApiError('OBTENER CATEGORÍA', error, { categoryID });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
+};
 
-}
-
-//obtener productos por categoria 
-
-const getProductoCategori = async (categoryID:string): Promise<CategoryResponse> =>{
+//Obtiene productos filtrados por categoría
+const getProductoCategori = async (categoryID: string): Promise<CategoryResponse> => {
   try {
-    
-    const response = await httpClient.get<CategoryResponse>(`/products/by-category/${categoryID}`)
-    return response.data
-  } catch (error) {
-    console.error("Error al obtener los productos filtrados por catgeoria:", error);
-    throw error;
-  }
+    if (!categoryID) {
+      throw new Error('El ID de categoría es requerido');
+    }
 
-}
+    const response = await httpClient.get<CategoryResponse>(
+      `/products/by-category/${categoryID}`
+    );
 
-//obtener productos por genero
+    if (!response.data) {
+      throw new Error('No se encontraron productos para esta categoría');
+    }
 
-const getGender= async (genderID:string): Promise<GenderResponse> =>{
-  try {
-    
-    const response = await httpClient.get<GenderResponse>(`/products/by-gender/${genderID}`)
+    console.log(`Productos de categoría ${categoryID} obtenidos exitosamente`);
     return response.data;
   } catch (error) {
-    console.error("Error al obtener los productos por genero", error);
-    throw error;
+    logApiError('OBTENER PRODUCTOS POR CATEGORÍA', error, { categoryID });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
+};
 
-}
-
-//obtener todos los generos con contador 
-
-const getGenderall= async (): Promise<GenderResponse> =>{
+/// Obtiene productos filtrados por género
+const getGender = async (genderID: string): Promise<GenderResponse> => {
   try {
-    
-    const response = await httpClient.get<GenderResponse>(`/products/genders/all`)
+    if (!genderID) {
+      throw new Error('El ID de género es requerido');
+    }
+
+    const response = await httpClient.get<GenderResponse>(
+      `/products/by-gender/${genderID}`
+    );
+
+    if (!response.data) {
+      throw new Error('No se encontraron productos para este género');
+    }
+
+    console.log(`Productos de género ${genderID} obtenidos exitosamente`);
     return response.data;
   } catch (error) {
-    console.error("Error al obtener los productos filtrados por catgeoria:", error);
-    throw error;
+    logApiError('OBTENER PRODUCTOS POR GÉNERO', error, { genderID });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
+};
 
-}
+//Obtiene todos los géneros disponibles
+const getGenderall = async (): Promise<GenderResponse> => {
+  try {
+    const response = await httpClient.get<GenderResponse>('/products/genders/all');
 
+    if (!response.data) {
+      throw new Error('No se recibieron géneros del servidor');
+    }
 
+    console.log('Géneros obtenidos exitosamente');
+    return response.data;
+  } catch (error) {
+    logApiError('OBTENER GÉNEROS', error);
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
+  }
+};
 
-export{getProductoCategori, getCategoryId,getCategories,getProductId,getProductdata,getGender,getGenderall};
+export {
+  getProductdata,
+  getProductId,
+  getCategories,
+  getCategoryId,
+  getProductoCategori,
+  getGender,
+  getGenderall
+};

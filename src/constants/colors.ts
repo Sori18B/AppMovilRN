@@ -1,5 +1,5 @@
 export const COLORS = {
-  brand: '#1D4ED8',
+  brand: '#7C3AED',
   success: '#10B981',
   danger: '#EF4444',
   gray: '#6B7280',

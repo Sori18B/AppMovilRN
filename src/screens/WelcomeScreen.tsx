@@ -98,12 +98,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryButton: {
-    backgroundColor: 'black',
+    backgroundColor: '#7C3AED',
   },
   secondaryButton: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'black',
+    borderWidth: 2,
+    borderColor: '#7C3AED',
   },
   buttonText: {
     color: 'white',
@@ -111,6 +111,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   secondaryButtonText: {
-    color: 'black',
+    color: '#7C3AED',
   },
 });

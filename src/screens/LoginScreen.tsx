@@ -10,7 +10,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Image,
   Animated,
   ToastAndroid,
 } from 'react-native';
@@ -186,6 +185,8 @@ export default function LoginScreen({ navigation }: any) {
   // Animaciones de inicio de sesion
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
+  const FormAnimate = useRef(new Animated.Value(500)).current;
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -200,9 +201,7 @@ export default function LoginScreen({ navigation }: any) {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
-
-  const FormAnimate = useRef(new Animated.Value(500)).current;
+  }, [fadeAnim, bounceAnim]);
 
   useEffect(() => {
     Animated.timing(FormAnimate, {
@@ -210,7 +209,7 @@ export default function LoginScreen({ navigation }: any) {
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [FormAnimate]);
 
   return (
     <KeyboardAvoidingView
@@ -358,16 +357,16 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    borderColor: 'black',
+    borderColor: '#7C3AED',
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    color: 'black',
+    color: '#2D3748',
     fontSize: 16,
     fontWeight: 'bold',
-    shadowColor: '#000',
+    shadowColor: '#7C3AED',
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -375,16 +374,16 @@ const styles = StyleSheet.create({
 
     width: '100%',
     height: 50,
-    borderColor: 'black',
+    borderColor: '#7C3AED',
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    color: 'black',
+    color: '#2D3748',
     fontSize: 16,
     fontWeight: 'bold',
-    shadowColor: '#000',
+    shadowColor: '#7C3AED',
   },
   passwordInput: {
     flex: 1,
@@ -409,7 +408,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   loginButton: {
-    backgroundColor: 'black',
+    backgroundColor: '#7C3AED',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
@@ -419,7 +418,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#D1D5DB',
   },
   loginButtonText: {
     color: '#fff',
@@ -436,7 +435,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   registerLinkTextBold: {
-    color: '#007AFF',
+    color: '#7C3AED',
     fontWeight: '600',
   },
   Image: {

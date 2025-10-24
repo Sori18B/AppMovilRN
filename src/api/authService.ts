@@ -1,5 +1,6 @@
 import httpClient from './http';
 import * as Keychain from 'react-native-keychain';
+import { handleApiError, logApiError } from '../utils';
 
 // Interfaces
 import { RegisterRequest } from '../types/registerRequest.interface';
@@ -7,92 +8,107 @@ import { LoginRequest } from '../types/loginRequest.interface';
 import { RegisterResponse } from '../types/registerResponse.interface';
 import { LoginResponse } from '../types/loginResponse.interface';
 
-/**
- * Función para registrar un nuevo usuario
- * @param data - Datos del usuario para registro
- * @returns Promise<RegisterResponse> - Respuesta del servidor con datos del registro
- */
+// Registra un nuevo usuario
 const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
   try {
-    console.log('Iniciando registro...');
-    console.log('Datos:', JSON.stringify(data, null, 2));
+    // Validación de datos antes de enviar
+    if (!data.email || !data.password || !data.name || !data.lastName) {
+      throw new Error('Todos los campos obligatorios deben estar completos');
+    }
+
+    if (data.password.length < 8) {
+      throw new Error('La contraseña debe tener al menos 8 caracteres');
+    }
 
     const response = await httpClient.post<RegisterResponse>('/users', data);
 
-    console.log('Registro exitoso:', response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error('Error en el servicio de registro:', error);
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    throw error;
-  }
-};
-
-/**
- * Función para iniciar sesión
- * @param data - Credenciales de login (email y password)
- * @returns Promise<LoginResponse> - Respuesta del servidor con token de acceso
- */
-const login = async (data: LoginRequest): Promise<LoginResponse> => {
-  try {
-    const response = await httpClient.post<LoginResponse>('/auth/login', data);
-    // Si el login es exitoso y recibimos un token...
-    if (response.data?.access_token) {
-      try {
-        // Guardamos el token en el Keychain de forma segura
-        await Keychain.setGenericPassword(
-          'userToken',
-          response.data.access_token,
-        );
-        console.log('✅ Token guardado en Keychain exitosamente');
-      } catch (keychainError) {
-        console.error('❌ Error al guardar token en Keychain:', keychainError);
-        // Si Keychain falla, el login también debe fallar
-        throw new Error(
-          'No se pudo guardar la sesión de forma segura. Intenta de nuevo.',
-        );
-      }
+    if (!response.data) {
+      throw new Error('El servidor no devolvió datos de registro');
     }
 
+    console.log('Usuario registrado exitosamente');
     return response.data;
   } catch (error) {
-    console.error('Error en el servicio de login:', error);
-    throw error;
+    logApiError('REGISTRO DE USUARIO', error, { email: data.email });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
 };
 
-/**
- * Función para cerrar sesión
- * Elimina el token del Keychain
- */
+// Inicia sesión de un usuario
+const login = async (data: LoginRequest): Promise<LoginResponse> => {
+  try {
+    // Validación de datos
+    if (!data.email || !data.password) {
+      throw new Error('Email y contraseña son requeridos');
+    }
+
+    const response = await httpClient.post<LoginResponse>('/auth/login', data);
+
+    // Validar que recibimos un token
+    if (!response.data?.access_token) {
+      throw new Error('El servidor no devolvió un token de acceso válido');
+    }
+
+    // Guardar token en Keychain
+    try {
+      await Keychain.setGenericPassword(
+        'userToken',
+        response.data.access_token
+      );
+      console.log('Token guardado en Keychain');
+    } catch (keychainError) {
+      console.error('Error crítico al guardar token:', keychainError);
+      throw new Error('No se pudo guardar la sesión de forma segura');
+    }
+
+    console.log('Inicio de sesión exitoso');
+    return response.data;
+  } catch (error) {
+    logApiError('LOGIN', error, { email: data.email });
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
+  }
+};
+
+//Función para cerrar sesión
 const logout = async (): Promise<void> => {
   try {
+    const hasCredentials = await Keychain.getGenericPassword();
+    
+    if (!hasCredentials) {
+      console.log('No hay sesión activa para cerrar');
+      return;
+    }
+
     await Keychain.resetGenericPassword();
-    console.log('✅ Token eliminado del Keychain exitosamente');
+    console.log('Sesión cerrada exitosamente');
   } catch (error) {
-    console.error('❌ Error al cerrar sesión (Keychain):', error);
-    // Si Keychain falla, el logout también debe fallar
-    throw new Error(
-      'No se pudo cerrar la sesión de forma segura. Intenta de nuevo.',
-    );
+    logApiError('LOGOUT', error);
+    throw new Error('No se pudo cerrar la sesión. Intenta de nuevo.');
   }
 };
 
-/**
- * Función para verificar si hay una sesión activa
- * @returns Promise<boolean> - true si hay token guardado
- */
+//Función para verificar si hay una sesión activa
 const isLoggedIn = async (): Promise<boolean> => {
   try {
     const credentials = await Keychain.getGenericPassword();
-    return !!credentials;
+    return !!credentials && !!credentials.password;
   } catch (error) {
-    console.error('❌ Error al verificar sesión (Keychain):', error);
-    // Si hay problemas con Keychain, asumir que no está logueado
+    console.error('Error al verificar sesión:', error);
     return false;
   }
 };
 
-// Exportamos las funciones
-export { register, login, logout, isLoggedIn };
+//Función para obtener el token almacenado
+const getToken = async (): Promise<string | null> => {
+  try {
+    const credentials = await Keychain.getGenericPassword();
+    return credentials ? credentials.password : null;
+  } catch (error) {
+    console.error('Error al obtener token:', error);
+    return null;
+  }
+};
+
+export { register, login, logout, isLoggedIn, getToken };
