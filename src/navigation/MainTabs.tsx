@@ -80,6 +80,7 @@ export default function MainTabs({ route }: MainTabsProps) {
         component={CartScreen}
         options={{
           tabBarLabel: 'Cart',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon name="shopping-cart" size={size} color={color} />
           ),
