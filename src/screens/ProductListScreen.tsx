@@ -5,7 +5,7 @@ export default function ProductListScreen() {
   return (
     <View>
       
-      <Text>Product List Screen!</Text>
+      <Text>Categories list!</Text>
 
     </View>
   );
