@@ -3,17 +3,18 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import type { RootStackParamList } from './AppNavigator';
 
 // Screens
-import HomeScreen from '../screens/HomeScreen';
-import ProductListScreen from '../screens/ProductListScreen';
+import HomeStack from './HomeStack';
+import ProductStack from './ProductStack';
 import CartScreen from '../screens/CartScreen';
 import ProfileStack from './ProfileStack';
 
 // Define los parámetros de este Tab Navigator
 type MainTabsParamList = {
-  Home: undefined;
+  HomeTab: undefined;
   Products: undefined;
   Cart: undefined;
   ProfileTab: undefined;
@@ -60,22 +61,29 @@ export default function MainTabs({ route }: MainTabsProps) {
         tabBarLabelStyle: styles.tabLabel
       }}
     >
-       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: HomeIcon,
-          headerTitle: HeaderLogo,
-          headerTitleAlign: 'center',
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeStack}
+        options={({ route }) => {
+          // Obtiene el nombre de la ruta activa dentro del HomeStack
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+          const isDetailScreen = routeName === 'ProductDetail';
+          return {
+            tabBarLabel: 'Home',
+            tabBarIcon: HomeIcon,
+            headerTitle: HeaderLogo,
+            headerTitleAlign: 'center',
+            headerShown: !isDetailScreen,
+          };
         }}
       />
       <Tab.Screen
         name="Products"
-        component={ProductListScreen}
+        component={ProductStack}
         options={{
           tabBarLabel: 'Products',
           tabBarIcon: ProductsIcon,
+          headerShown: false,
         }}
       />
       <Tab.Screen

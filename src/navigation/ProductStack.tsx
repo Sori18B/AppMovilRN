@@ -1,13 +1,11 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ProductListScreen from '../screens/ProductListScreen';
-import ProductDetailScreen from '../screens/ProductDetailScreen';
-import { ProductResponse } from '../types/product.response.interface';
+import ProductDetailScreen from '../screens/ProductDetailScreen'; // <-- Import the new screen
 
+// Define params for this stack
 export type ProductStackParamList = {
   ProductList: undefined;
-  ProductDetail: { product: ProductResponse };
+  ProductDetail: { product: any }; // Expects a 'product' object
 };
 
 const Stack = createNativeStackNavigator<ProductStackParamList>();
