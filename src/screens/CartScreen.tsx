@@ -14,7 +14,7 @@ import { useCart } from '../contexts';
 import { CartItem, CartSummary } from '../components/cart';
 import { colors } from '../theme';
 
-export default function CartScreen() {
+export default function CartScreen({navigation}: any) {
   const { items, updateQuantity, removeItem, subtotal, shipping, total } = useCart();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,7 +47,7 @@ export default function CartScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Carrito de Compras</Text>
+        <Text style={styles.headerTitle}>Carrito</Text>
         <Text style={styles.itemCount}>{items.length} productos</Text>
       </View>
 
@@ -71,7 +71,7 @@ export default function CartScreen() {
             <Text style={styles.emptyCartText}>
               Agrega algunos productos increíbles a tu carrito
             </Text>
-            <TouchableOpacity style={styles.continueShoppingButton}>
+            <TouchableOpacity style={styles.continueShoppingButton} onPress={() => navigation.navigate('Products')}>
               <Text style={styles.continueShoppingText}>Continuar Comprando</Text>
             </TouchableOpacity>
           </View>
