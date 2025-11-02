@@ -1,77 +1,133 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  StyleSheet, 
-  TouchableOpacity, 
+import React, { useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
   Alert,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCart } from '../contexts';
 import { CartItem, CartSummary } from '../components/cart';
 import { colors } from '../theme';
+import { useFocusEffect } from '@react-navigation/native';
+import { UpdateCartItemRequest } from '../types/cart.Request.interface';
 
-export default function CartScreen({navigation}: any) {
-  const { items, updateQuantity, removeItem, subtotal, shipping, total } = useCart();
-  const [refreshing, setRefreshing] = useState(false);
+export default function CartScreen({ navigation }: any) {
 
-  const handleRemoveItem = (id: string) => {
+  const {
+    cart,
+    loading,
+    error,
+    loadCart,
+    updateItemQuantity,
+    removeItemFromCart,
+  } = useCart();
+
+  // Hook para actualizar al enfocar la pantalla
+  useFocusEffect(
+    useCallback(() => {
+      loadCart();
+    }, [loadCart]),
+  );
+
+  const items = cart?.data?.items || [];
+  const summary = cart?.data?.summary;
+  const totalItems = summary?.totalItems || 0;
+  const subtotal = summary?.subtotal || 0;
+  const total = summary?.estimatedTotal || 0;
+
+  // Calcular envío o impuestos (si existe la diferencia)
+  const shipping =
+    summary && summary.estimatedTotal > summary.subtotal
+      ? summary.estimatedTotal - summary.subtotal
+      : 0;
+
+  const onRefresh = useCallback(async () => {
+    await loadCart();
+  }, [loadCart]);
+
+  const handleRemoveItem = (id: number) => {
     Alert.alert(
       'Eliminar producto',
       '¿Estás seguro de que quieres eliminar este producto del carrito?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Eliminar', 
+        {
+          text: 'Eliminar',
           style: 'destructive',
-          onPress: () => removeItem(id)
-        }
-      ]
+          onPress: () => removeItemFromCart(id),
+        },
+      ],
     );
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    // Simula actualización de datos
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+  const handleUpdateQuantity = (itemId: number, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(itemId);
+    } else {
+      const itemUpdate: UpdateCartItemRequest = { quantity: newQuantity };
+      updateItemQuantity(itemId, itemUpdate);
+    }
   };
 
-  const hasOutOfStockItems = items.some(item => !item.inStock);
+  if (loading && !cart) {
+    return (
+      <View style={[styles.container, styles.emptyCart]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Cargando tu carrito...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.emptyCart]}>
+        <Icon name="error-outline" size={80} color={colors.gray300} />
+        <Text style={styles.emptyCartTitle}>Error al cargar el carrito</Text>
+        <Text style={styles.emptyCartText}>{error}</Text>
+        <TouchableOpacity style={styles.continueShoppingButton} onPress={onRefresh}>
+          <Text style={styles.continueShoppingText}>Intentar de nuevo</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const isButtonDisabled = loading;
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Carrito</Text>
-        <Text style={styles.itemCount}>{items.length} productos</Text>
+        <Text style={styles.itemCount}>{totalItems} productos</Text>
       </View>
 
-      {items.length === 0 ? (
+      {totalItems === 0 ? (
         // Carrito vacío
         <ScrollView
           contentContainerStyle={styles.emptyCart}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={loading}
               onRefresh={onRefresh}
               colors={[colors.primary]}
               tintColor={colors.primary}
-              title="Actualizando..."
             />
-          }
-        >
+          }>
           <View style={styles.emptyCart}>
             <Icon name="shopping-cart" size={80} color={colors.gray300} />
             <Text style={styles.emptyCartTitle}>Tu carrito está vacío</Text>
             <Text style={styles.emptyCartText}>
               Agrega algunos productos increíbles a tu carrito
             </Text>
-            <TouchableOpacity style={styles.continueShoppingButton} onPress={() => navigation.navigate('Products')}>
+            <TouchableOpacity
+              style={styles.continueShoppingButton}
+              onPress={() => navigation.navigate('Products')}>
               <Text style={styles.continueShoppingText}>Continuar Comprando</Text>
             </TouchableOpacity>
           </View>
@@ -83,20 +139,18 @@ export default function CartScreen({navigation}: any) {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={loading}
               onRefresh={onRefresh}
               colors={[colors.primary]}
               tintColor={colors.primary}
-              title="Actualizando..."
             />
-          }
-        >
+          }>
           <View style={styles.itemsContainer}>
-            {items.map((item) => (
+            {items.map(item => (
               <CartItem
-                key={item.id}
+                key={item.cartItemID}
                 item={item}
-                onUpdateQuantity={updateQuantity}
+                onUpdateQuantity={handleUpdateQuantity}
                 onRemove={handleRemoveItem}
               />
             ))}
@@ -112,18 +166,21 @@ export default function CartScreen({navigation}: any) {
       )}
 
       {/* Botón de checkout */}
-      {items.length > 0 && (
+      {totalItems > 0 && (
         <View style={styles.checkoutContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.checkoutButton,
-              hasOutOfStockItems && styles.disabledButton
+              isButtonDisabled && styles.disabledButton,
             ]}
-            disabled={hasOutOfStockItems}
-          >
-            <Text style={styles.checkoutButtonText}>
-              Proceder al Pago - ${total.toFixed(2)}
-            </Text>
+            disabled={isButtonDisabled}>
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.checkoutButtonText}>
+                Proceder al Pago - ${total.toFixed(2)}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       )}
@@ -162,12 +219,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
   emptyCartTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.textPrimary,
     marginTop: 20,
     marginBottom: 10,
+    textAlign: 'center',
   },
   emptyCartText: {
     fontSize: 16,
@@ -206,6 +269,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    minHeight: 50,
   },
   disabledButton: {
     backgroundColor: colors.gray400,

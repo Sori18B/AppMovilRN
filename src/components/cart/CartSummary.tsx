@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { colors } from '../../theme';
+
+const { height } = Dimensions.get('window');
 
 interface CartSummaryProps {
   subtotal: number;
@@ -56,7 +58,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: height * 0.13,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
