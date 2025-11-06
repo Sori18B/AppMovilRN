@@ -1,32 +1,37 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '../../theme';
-
-export interface CartItemData {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  size?: string;
-  color?: string;
-  quantity: number;
-  image: string;
-  inStock: boolean;
-}
+import { Item } from '../../types/cart.Response.interface';
 
 interface CartItemProps {
-  item: CartItemData;
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
+  item: Item;
+  onUpdateQuantity: (id: number, quantity: number) => void;
+  onRemove: (id: number) => void;
 }
 
-export const CartItem: React.FC<CartItemProps> = ({ 
-  item, 
-  onUpdateQuantity, 
-  onRemove 
+export const CartItem: React.FC<CartItemProps> = ({
+  item,
+  onUpdateQuantity,
+  onRemove,
 }) => {
   const [deleteScaleAnim] = useState(new Animated.Value(1));
+
+  const { cartItemID, quantity, productVariant } = item;
+  const { product, size, color, price, stock } = productVariant;
+
+  const imageUrl = product.mainImage || 'https://via.placeholder.com/150';
+
+  const currentPrice = parseFloat(price);
+
+  const inStock = stock > 0;
 
   const handleDeletePressIn = () => {
     Animated.spring(deleteScaleAnim, {
@@ -45,63 +50,67 @@ export const CartItem: React.FC<CartItemProps> = ({
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      
+      <Image source={{ uri: imageUrl }} style={styles.image} />
+
       <View style={styles.details}>
         <View style={styles.header}>
-          <Text style={styles.name}>{item.name}</Text>
-          <TouchableOpacity 
-            onPress={() => onRemove(item.id)} 
+          <Text style={styles.name}>{product.name}</Text>
+          <TouchableOpacity
+            onPress={() => onRemove(cartItemID)}
             style={styles.deleteButton}
             onPressIn={handleDeletePressIn}
             onPressOut={handleDeletePressOut}
-            activeOpacity={1}
-          >
+            activeOpacity={1}>
             <Animated.View style={{ transform: [{ scale: deleteScaleAnim }] }}>
               <Icon name="delete-outline" size={20} color={colors.error} />
             </Animated.View>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.attributes}>
-          {item.size && <Text style={styles.attribute}>Talla: {item.size}</Text>}
-          {item.color && <Text style={styles.attribute}>Color: {item.color}</Text>}
-        </View>
-        
-        <View style={styles.priceContainer}>
-          {item.originalPrice && (
-            <Text style={styles.originalPrice}>
-              ${item.originalPrice.toFixed(2)}
-            </Text>
+          {size && <Text style={styles.attribute}>Talla: {size}</Text>}
+          {color.name && (
+            <Text style={styles.attribute}>Color: {color.name}</Text>
           )}
-          <Text style={styles.currentPrice}>${item.price.toFixed(2)}</Text>
         </View>
-        
-        {!item.inStock && <Text style={styles.outOfStock}>Agotado</Text>}
+
+        <View style={styles.priceContainer}>
+          <Text style={styles.currentPrice}>${currentPrice.toFixed(2)}</Text>
+        </View>
+
+        {!inStock && <Text style={styles.outOfStock}>Agotado</Text>}
       </View>
-      
+
       <View style={styles.quantityContainer}>
-        <TouchableOpacity 
-          style={[styles.quantityButton, item.quantity <= 1 && styles.quantityButtonDisabled]}
-          onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
-          disabled={item.quantity <= 1}
-          activeOpacity={0.7}
-        >
-          <Icon 
-            name="remove" 
-            size={16} 
-            color={item.quantity <= 1 ? colors.gray300 : colors.primary} 
+        <TouchableOpacity
+          style={[
+            styles.quantityButton,
+            quantity <= 1 && styles.quantityButtonDisabled,
+          ]}
+          onPress={() => onUpdateQuantity(cartItemID, quantity - 1)}
+          disabled={quantity <= 1}
+          activeOpacity={0.7}>
+          <Icon
+            name="remove"
+            size={16}
+            color={quantity <= 1 ? colors.gray300 : colors.primary}
           />
         </TouchableOpacity>
-        
-        <Text style={styles.quantityText}>{item.quantity}</Text>
-        
-        <TouchableOpacity 
+
+        <Text style={styles.quantityText}>{quantity}</Text>
+        <TouchableOpacity
           style={styles.quantityButton}
-          onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
+          onPress={() => onUpdateQuantity(cartItemID, quantity + 1)}
           activeOpacity={0.7}
+          disabled={!inStock || quantity >= stock}
         >
-          <Icon name="add" size={16} color={colors.primary} />
+          <Icon
+            name="add"
+            size={16}
+            color={
+              !inStock || quantity >= stock ? colors.gray300 : colors.primary
+            }
+          />
         </TouchableOpacity>
       </View>
     </View>

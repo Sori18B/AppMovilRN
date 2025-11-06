@@ -1,153 +1,183 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from 'react';
+import { cartService } from '../api/cartService';
+import {
+  AddToCartRequest,
+  UpdateCartItemRequest,
+} from '../types/cart.Request.interface';
+import { CartResponse } from '../types/cart.Response.interface';
+import { useAuth } from './AuthContext';
 
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  size?: string;
-  color?: string;
-  quantity: number;
-  image: string;
-  inStock: boolean;
+// Definir el estado
+interface CartState {
+  cart: CartResponse | null;
+  loading: boolean;
+  error: string | null;
 }
 
-interface CartContextType {
-  items: CartItem[];
-  itemCount: number;
-  subtotal: number;
-  total: number;
-  shipping: number;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
-  isInCart: (id: string) => boolean;
+// Definir las acciones del reducer
+type CartAction =
+  | { type: 'CART_START' }
+  | { type: 'CART_SUCCESS'; payload: CartResponse }
+  | { type: 'CART_ERROR'; payload: string }
+  | { type: 'CART_CLEAR' };
+
+// Definir el estado inicial
+const initialState: CartState = {
+  cart: null,
+  loading: false,
+  error: null,
+};
+
+// Crear el Reducer
+const cartReducer = (state: CartState, action: CartAction): CartState => {
+  switch (action.type) {
+    case 'CART_START':
+      return { ...state, loading: true, error: null };
+    case 'CART_SUCCESS':
+      return { ...state, loading: false, cart: action.payload, error: null };
+    case 'CART_ERROR':
+      return { ...state, loading: false, error: action.payload };
+    case 'CART_CLEAR':
+      return initialState;
+    default:
+      return state;
+  }
+};
+
+interface CartContextType extends CartState {
+  loadCart: () => Promise<void>;
+  addItemToCart: (item: AddToCartRequest) => Promise<void>;
+  updateItemQuantity: (
+    itemId: number,
+    item: UpdateCartItemRequest,
+  ) => Promise<void>;
+  removeItemFromCart: (itemId: number) => Promise<void>;
+  clearUserCart: () => Promise<void>;
+  clearCartOnLogout: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-const CART_STORAGE_KEY = '@ecommerce_cart';
-const SHIPPING_COST = 5.99;
-const FREE_SHIPPING_THRESHOLD = 50;
 
 interface CartProviderProps {
   children: ReactNode;
 }
 
-export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+export const CartProvider = ({ children }: CartProviderProps) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { isAuthenticated } = useAuth();
 
   const loadCart = useCallback(async () => {
+    dispatch({ type: 'CART_START' });
     try {
-      const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
-      if (cartData) {
-        setItems(JSON.parse(cartData));
-      }
+      const cartData = await cartService.getCart();
+      dispatch({ type: 'CART_SUCCESS', payload: cartData });
     } catch (error) {
-      console.error('Error cargando carrito:', error);
+      dispatch({ type: 'CART_ERROR', payload: (error as Error).message });
     }
   }, []);
 
-  const saveCart = useCallback(async () => {
-    try {
-      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    } catch (error) {
-      console.error('Error guardando carrito:', error);
-    }
-  }, [items]);
+  const clearCartOnLogout = useCallback(() => {
+    dispatch({ type: 'CART_CLEAR' });
+  }, []);
 
-  // Cargar carrito desde AsyncStorage al iniciar
+  // Cargar el carrito inicial
   useEffect(() => {
-    loadCart();
-  }, [loadCart]);
-
-  // Guardar carrito en AsyncStorage cuando cambie
-  useEffect(() => {
-    if (items.length > 0) {
-      saveCart();
+    if (isAuthenticated) {
+      loadCart();
+    } else {
+      clearCartOnLogout();
     }
-  }, [items, saveCart]);
+  }, [isAuthenticated, loadCart, clearCartOnLogout]);
 
-  const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
-    setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === newItem.id);
-      
-      if (existingItem) {
-        // Si el item ya existe, incrementar cantidad
-        return prevItems.map((item) =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        // Si no existe, agregarlo con cantidad 1
-        return [...prevItems, { ...newItem, quantity: 1 }];
+  const addItemToCart = useCallback(
+    async (item: AddToCartRequest) => {
+      dispatch({ type: 'CART_START' });
+      try {
+        await cartService.addToCart(item);
+        await loadCart();
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        dispatch({ type: 'CART_ERROR', payload: (error as Error).message });
+        throw new Error(errorMessage);
       }
-    });
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) {
-      removeItem(id);
-      return;
-    }
-    
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const clearCart = () => {
-    setItems([]);
-  };
-
-  const isInCart = (id: string): boolean => {
-    return items.some((item) => item.id === id);
-  };
-
-  // Cálculos
-  const subtotal = items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
+    },
+    [loadCart],
   );
 
-  const shipping = subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD 
-    ? SHIPPING_COST 
-    : 0;
+  const updateItemQuantity = useCallback(
+    async (itemId: number, item: UpdateCartItemRequest) => {
+      dispatch({ type: 'CART_START' });
+      try {
+        await cartService.updateCartItem(itemId, item);
+        await loadCart();
+      } catch (error) {
+        dispatch({ type: 'CART_ERROR', payload: (error as Error).message }); //
+      }
+    },
+    [loadCart],
+  );
 
-  const total = subtotal + shipping;
+  const removeItemFromCart = useCallback(
+    async (itemId: number) => {
+      dispatch({ type: 'CART_START' });
+      try {
+        await cartService.removeCartItem(itemId);
+        await loadCart();
+      } catch (error) {
+        dispatch({ type: 'CART_ERROR', payload: (error as Error).message });
+      }
+    },
+    [loadCart],
+  );
 
-  const itemCount = items.reduce((count, item) => count + item.quantity, 0);
+  const clearUserCart = useCallback(async () => {
+    dispatch({ type: 'CART_START' });
+    try {
+      await cartService.clearCart();
+      await loadCart();
+    } catch (error) {
+      dispatch({ type: 'CART_ERROR', payload: (error as Error).message });
+    }
+  }, [loadCart]);
 
-  const value: CartContextType = {
-    items,
-    itemCount,
-    subtotal,
-    total,
-    shipping,
-    addItem,
-    removeItem,
-    updateQuantity,
-    clearCart,
-    isInCart,
-  };
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      loadCart,
+      addItemToCart,
+      updateItemQuantity,
+      removeItemFromCart,
+      clearUserCart,
+      clearCartOnLogout,
+    }),
+    [
+      state,
+      loadCart,
+      addItemToCart,
+      updateItemQuantity,
+      removeItemFromCart,
+      clearUserCart,
+      clearCartOnLogout,
+    ],
+  ); //
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider> //
+  );
 };
 
-// Hook personalizado para usar el contexto
-export const useCart = (): CartContextType => {
+export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart debe usarse dentro de CartProvider');
+  if (context === undefined) {
+    throw new Error('useCart debe ser usado dentro de un CartProvider');
   }
   return context;
 };

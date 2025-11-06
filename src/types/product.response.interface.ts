@@ -4,7 +4,7 @@ export interface ProductResponse {
   productID: number;
   name: string;
   description: string;
-  basePrice: number;
+  basePrice: string;
   isActive: boolean;
   category: CategoryResponse;
   gender: GenderResponse;
