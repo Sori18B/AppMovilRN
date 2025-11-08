@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { ProductCard } from '../components/product';
 import { ErrorMessage } from '../components/common';
-import { useCallback } from 'react';
 import { getProductdata } from '../api/productService';
 import { colors } from '../theme';
 import { Categories } from '../components/home/Categories';
@@ -20,7 +19,13 @@ interface Product {
 
 const ListHeader = ({ navigation, currentBannerIndex, setCurrentBannerIndex }: any) => (
   <>
-    <Categories />
+    <Categories isShort={true} onPressCategory={(id) => {
+      if (id === 0) {
+        navigation.navigate('Products');
+      } else {
+        navigation.navigate('Products', { screen: 'ProductList', params: { categoryID: id } });
+      }
+    }} />
     <BannerCarousel
       navigation={navigation}
       currentBannerIndex={currentBannerIndex}
