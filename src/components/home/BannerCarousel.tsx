@@ -5,9 +5,9 @@ import Carousel from 'react-native-reanimated-carousel';
 const { width } = Dimensions.get('window');
 
 const banners = [
-  { id: 1, image: 'https://previews.123rf.com/images/stickerside/stickerside2207/stickerside220700124/189853956-big-sale-banner-template-up-to-50-percent-off-special-offer-great-discount-promotion-price.jpg', url: 'https://example.com/tenis' },
-  { id: 2, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80', url: 'https://example.com/relojes' },
-  { id: 3, image: 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1000&q=80', url: 'https://example.com/ropa' },
+  { id: 1, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner1.jpg', url: 'https://example.com/tenis' },
+  { id: 2, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner2.PNG', url: 'https://example.com/relojes' },
+  { id: 3, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner3.png', url: 'https://example.com/ropa' },
 ];
 
 interface BannerCarouselProps {
@@ -16,6 +16,9 @@ interface BannerCarouselProps {
   setCurrentBannerIndex: (index: number) => void;
 }
 
+/**
+ * Componente para manejar la lógica y UI del carrusel de banners.
+ */
 export const BannerCarousel: React.FC<BannerCarouselProps> = ({ navigation, currentBannerIndex, setCurrentBannerIndex }) => {
   return (
     <View style={{ marginVertical: 15 }}>

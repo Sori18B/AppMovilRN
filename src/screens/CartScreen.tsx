@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCart } from '../contexts';
 import { CartItem, CartSummary } from '../components/cart';
+import DiscountCoupon from '../components/cart/DiscountCoupon';
 import { colors } from '../theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { UpdateCartItemRequest } from '../types/cart.Request.interface';
@@ -104,7 +105,7 @@ export default function CartScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Carrito</Text>
-        <Text style={styles.itemCount}>{totalItems} productos</Text>
+        <Text style={styles.itemCount}>{totalItems === 1 ? '1 producto' : `${totalItems} productos`}</Text>
       </View>
 
       {totalItems === 0 ? (
@@ -155,6 +156,9 @@ export default function CartScreen({ navigation }: any) {
               />
             ))}
           </View>
+
+          {/* --- Sección de cupón --- */}
+          <DiscountCoupon />
 
           {/* Resumen del pedido */}
           <CartSummary
@@ -252,6 +256,7 @@ const styles = StyleSheet.create({
   },
   itemsContainer: {
     padding: 15,
+    paddingBottom: 0,
   },
   checkoutContainer: {
     position: 'absolute',

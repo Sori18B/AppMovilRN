@@ -19,6 +19,7 @@ export interface CategoryResponse {
   categoryName: string;
   description?: string;
   isActive: boolean;
+  products: ProductResponse[];
 }
 
 export interface GenderResponse {
