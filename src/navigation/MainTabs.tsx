@@ -88,13 +88,14 @@ export default function MainTabs({ route }: MainTabsProps) {
       />
       <Tab.Screen
         name="CartTab"
-        component={CartStack}
         options={{
           tabBarLabel: 'Cart',
           headerShown: false,
           tabBarIcon: CartIcon,
         }}
-      />
+      >
+        {() => <CartStack userID={userId}/>}
+      </Tab.Screen>
       <Tab.Screen
         name="ProfileTab"
         options={{

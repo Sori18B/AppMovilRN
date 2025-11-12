@@ -18,7 +18,7 @@ const getAddresData = async (userID: string): Promise<Address[]> => {
       throw new Error('No se recibieron datos del servidor');
     }
 
-    return response.data.address || [];
+    return response.data.addresses || [];
   } catch (error) {
     logApiError('OBTENER DIRECCIONES', error, { userID });
     const apiError = handleApiError(error);

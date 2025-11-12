@@ -5,7 +5,7 @@ export enum AddressType {
   }
 
 export interface Address {
-    id:string
+    addressID: string | number;
     addressType: AddressType;
     firstName: string;
     lastName: string;
