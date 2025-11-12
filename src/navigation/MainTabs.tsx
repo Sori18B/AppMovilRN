@@ -9,14 +9,14 @@ import type { RootStackParamList } from './AppNavigator';
 // Screens
 import HomeStack from './HomeStack';
 import ProductStack from './ProductStack';
-import CartScreen from '../screens/CartScreen';
+import CartStack from './CartStack';
 import ProfileStack from './ProfileStack';
 
 // Define los parámetros de este Tab Navigator
 type MainTabsParamList = {
   HomeTab: undefined;
   Products: undefined;
-  Cart: undefined;
+  CartTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -87,14 +87,15 @@ export default function MainTabs({ route }: MainTabsProps) {
         }}
       />
       <Tab.Screen
-        name="Cart"
-        component={CartScreen}
+        name="CartTab"
         options={{
           tabBarLabel: 'Cart',
           headerShown: false,
           tabBarIcon: CartIcon,
         }}
-      />
+      >
+        {() => <CartStack userID={userId}/>}
+      </Tab.Screen>
       <Tab.Screen
         name="ProfileTab"
         options={{

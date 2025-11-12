@@ -6,7 +6,7 @@ const { width } = Dimensions.get('window');
 
 const banners = [
   { id: 1, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner1.jpg', url: 'https://example.com/tenis' },
-  { id: 2, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner2.PNG', url: 'https://example.com/relojes' },
+  { id: 2, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner2.png', url: 'https://example.com/relojes' },
   { id: 3, image: 'https://dxvidglz.github.io/VistellaIMG/assets/banner/banner3.png', url: 'https://example.com/ropa' },
 ];
 

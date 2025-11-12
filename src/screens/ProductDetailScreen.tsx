@@ -63,7 +63,7 @@ export default function ProductDetailScreen({ navigation, route }: any) {
 
       try {
         await addItemToCart(itemToAdd);
-        navigation.navigate('Cart');
+        navigation.navigate('CartTab');
       } catch (error) {
         Alert.alert(
           'Error',

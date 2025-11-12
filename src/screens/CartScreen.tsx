@@ -177,7 +177,8 @@ export default function CartScreen({ navigation }: any) {
               styles.checkoutButton,
               isButtonDisabled && styles.disabledButton,
             ]}
-            disabled={isButtonDisabled}>
+            disabled={isButtonDisabled}
+            onPress={() => navigation.navigate('Checkout')}>
             {loading ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (

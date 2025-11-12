@@ -5,6 +5,6 @@ export interface UserData {
     email: string;
     lastName: string;
     phoneNumber: string;
-    address: Address[];
+    addresses: Address[];
   }
   
