@@ -4,7 +4,7 @@ import { API_URL } from '@env';
 
 // Configuración del cliente HTTP
 const httpClient = axios.create({
-  baseURL: API_URL || 'http://10.0.2.2:3000/',
+  baseURL: 'https://ecommerce-api-produccion.onrender.com',
   timeout: 15000, // 15 segundos
   headers: {
     'Content-Type': 'application/json',

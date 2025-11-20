@@ -4,6 +4,9 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { ProfileStackParamList } from "../navigation/ProfileStack"; 
 import { getUserData } from '../api/userService';
+import { getorders } from '../api/orderService';
+
+
 import { 
   ProfileHeader, 
   UserInfoCard, 
@@ -14,7 +17,6 @@ import {
 import { LoadingSpinner, ErrorMessage, Button } from '../components/common';
 import { colors } from '../theme';
 
-
 type ProfileInformationScreenProps = NativeStackScreenProps<
   ProfileStackParamList,
   "ProfileInformation"
@@ -22,11 +24,18 @@ type ProfileInformationScreenProps = NativeStackScreenProps<
 
 export default function ProfileInformationScreen({ navigation, route }: ProfileInformationScreenProps) {
   const [userData, setUserData] = useState<any | null>(null);
+
+  // 👇 NUEVO estado para órdenes
+  const [orders, setOrders] = useState<OrderData[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { userID } = route.params;
 
+  // ===========================
+  //   1️⃣ Obtener datos usuario
+  // ===========================
   useFocusEffect(
     useCallback(() => {
       const fetchUserData = async () => {
@@ -53,6 +62,55 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
     }, [userID])
   );
 
+  // ===========================
+  //   2️⃣ Obtener órdenes
+  // ===========================
+  useFocusEffect(
+    useCallback(() => {
+      const fetchOrders = async () => {
+        try {
+          const ordersFromApi = await getorders();
+
+          // Si viene vacío, paramos
+          if (!ordersFromApi || ordersFromApi.length === 0) {
+            setOrders([]);
+            return;
+          }
+
+          const formatStatus = (status: string): OrderData["status"] => {
+             // Convertimos a minúsculas para asegurar coincidencia
+             const s = status ? status.toLowerCase() : "";
+             if (s === 'delivered' || s === 'entregado') return "Entregado";
+             if (s === 'shipped' || s === 'en camino') return "En camino";
+             if (s === 'cancelled' || s === 'cancelado') return "Cancelado";
+             return "Procesando"; // Default
+          };
+
+          // MAPEO EXACTO SEGÚN TU LOG JSON
+          const formattedOrders = ordersFromApi.map((order: any): OrderData => ({
+            // Tu log dice "orderID" (número), lo convertimos a string
+            orderId: String(order.orderID), 
+            
+            // Tu log dice "orderDate", NO "createdAt"
+            date: order.orderDate ? order.orderDate.split('T')[0] : "N/A", 
+            
+            // Tu log dice "totalAmount"
+            total: Number(order.totalAmount),
+            
+            // Tu log dice "orderStatus"
+            status: formatStatus(order.orderStatus)
+          }));
+
+          setOrders(formattedOrders);
+        } catch (err) {
+          console.error("Error al procesar órdenes:", err);
+        }
+      };
+      fetchOrders();
+    }, [])
+  );
+  
+
   if (loading) {
     return <LoadingSpinner message="Cargando información..." />;
   }
@@ -61,7 +119,7 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
     return <ErrorMessage message={error} onRetry={() => navigation.goBack()} />;
   }
 
-  // Preparar datos para UserInfoCard
+  // Datos del UserInfoCard
   const userInfo = [
     { label: 'Nombre', value: userData?.name || 'N/A' },
     { label: 'Apellido', value: userData?.lastName || 'N/A' },
@@ -69,25 +127,8 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
     { label: 'Teléfono', value: userData?.phoneNumber || 'N/A' },
   ];
 
-  // Mock de órdenes recientes (reemplazar con datos reales)
-  const recentOrders: OrderData[] = [
-    {
-      orderId: 'ORD-2024-001',
-      date: '15 Ene 2024',
-      total: 1250.00,
-      status: 'Entregado',
-    },
-    {
-      orderId: 'ORD-2024-002',
-      date: '10 Ene 2024',
-      total: 890.00,
-      status: 'En camino',
-    },
-  ];
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header con foto de perfil */}
       <ProfileHeader
         name={`${userData?.name} ${userData?.lastName}`}
         email={userData?.email}
@@ -95,14 +136,12 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
         onEditPress={() => navigation.navigate('UpdateUser', { userId: String(userData.userID) })}
       />
 
-      {/* Información Personal */}
       <UserInfoCard
         title="Información Personal"
         iconName="person"
         data={userInfo}
       />
 
-      {/* Botón Editar Información */}
       <View style={styles.buttonContainer}>
         <Button
           title="Editar Información"
@@ -130,11 +169,15 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
         />
       </View>
 
-      {/* Órdenes Recientes */}
+      {/* Órdenes (ya reales) */}
       <View style={styles.section}>
         <OrderListSimple
-          orders={recentOrders}
-          onOrderPress={(orderId) => console.log('Ver orden:', orderId)}
+          orders={orders}
+          onOrderPress={(orderID) => {
+            console.log("Navegando al detalle:", orderID);
+            navigation.navigate('OrderDetails', { orderID: orderID });
+          }}
+          
           onViewAll={() => console.log('Ver todas las órdenes')}
         />
       </View>
@@ -142,7 +185,6 @@ export default function ProfileInformationScreen({ navigation, route }: ProfileI
   );
 };
 
-// --- ESTILOS MODIFICADOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
